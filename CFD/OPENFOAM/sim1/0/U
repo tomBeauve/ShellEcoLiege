@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include    "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform ($Uinlet 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform ($Uinlet 0 0);
+    }
+
+    outlet
+    {
+        type zeroGradient;
+    }
+    freestream
+    {
+        type            freestreamVelocity;
+        freestreamValue uniform ($Uinlet 0 0);
+    }
+
+    symmetry
+    {
+        type symmetryPlane;
+    }
+
+    ground 
+    { 
+        type        movingWallVelocity;
+        value       uniform ($Uinlet 0 0);
+    }
+
+    "(body)"
+    {
+        type            noSlip;
+    }
+
+    "(frontWheel)"
+    {
+        type            rotatingWallVelocity;
+        origin          $fWheelCenter;
+        axis            (0 -1 0);
+        omega           $WheelSpeed;
+    }
+
+    "(rearWheel)"
+    {
+        type            rotatingWallVelocity;
+        origin          $rWheelCenter;
+        axis            (0 -1 0);
+        omega           $WheelSpeed;
+    }
+
+    processor
+    {
+        type            processor;
+        value           uniform (0 0 0);
+    }
+}
+
+// ************************************************************************* //

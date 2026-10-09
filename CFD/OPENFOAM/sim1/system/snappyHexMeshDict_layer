@@ -1,0 +1,208 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include    "snappyHexMeshDict.cfg"
+
+castellatedMesh off;
+snap            off;
+addLayers       on;
+
+geometry
+{
+    body
+    {
+        type triSurfaceMesh;
+        file "body.stl";
+    }
+    
+
+    rearWheel
+    {
+        type triSurfaceMesh;
+        file "rearWheel.stl";
+    }
+
+    frontWheel
+    {
+        type triSurfaceMesh;
+        file "frontWheel.stl";
+    }
+
+    
+    // Tier 2: Front wheel & underbody critical wake zone
+    wheelUnderbodyWake
+    {
+        type searchableBox;
+        min (0.300 0 0);
+        max (2.350 0.465 0.500);
+    }
+
+    // Tier 2: Core wake directly behind boat-tail
+    wakeFine
+    {
+        type searchableBox;
+        min (2.350 0 0);
+        max (5.050 0.390 0.550);
+    }
+
+    // Tier 3: Mid wake transition box
+    wakeMid
+    {
+        type searchableBox;
+        min (0 0 0);
+        max (9.870 0.720 0.800);
+    }
+
+    // Tier 4: Far-field domain containment box
+    wakeFar
+    {
+        type searchableBox;
+        min (-0.500 0 0);
+        max (15.000 0.915 1.000);
+    }
+
+};
+
+castellatedMeshControls
+{
+    features 
+    (
+        {file "body.extendedFeatureEdgeMesh"; level 5; }
+        {file "frontWheel.extendedFeatureEdgeMesh"; level 6; }
+        {file "rearWheel.extendedFeatureEdgeMesh"; level 6; }
+
+    );
+
+    refinementSurfaces
+    {
+        body
+        {
+            // minCellSize (0.78% = Level 7), maxCellSize (6.25% = Level 4)
+            level (4 6);
+            patchInfo { type wall; }
+        }
+
+         ".*Wheel"
+        {
+            // minCellSize (0.39% = Level 8), maxCellSize (3.125% = Level 5)
+            level (5 7);
+        }
+        
+    }
+
+    refinementRegions
+    {
+        
+        "body"
+        {
+            mode    distance;
+            levels  (
+                (0.10 4) 
+                (0.25 3)
+            );
+        }
+        ".*Wheel"
+        {
+            mode    distance;
+            levels  (
+                (0.025 5)
+                (0.10 4) 
+                (0.25 3)
+                
+            );
+        }
+        wheelUnderbodyWake
+        {
+            mode inside;
+            level 5; // Level 5 (3.125% of volBaseSize)
+        }
+        wakeFine
+        {
+            mode inside;
+            level 4; // Level 5 (6.25% of volBaseSize)
+        }
+        wakeMid
+        {
+            mode inside;
+            level 3; // Level 3 (12.5% of volBaseSize)
+        }
+        wakeFar
+        {
+            mode inside;
+            level 2; // Level 2 (25.0% of volBaseSize)
+        }
+    }
+
+    insidePoint (0 0 3);
+    nCellsBetweenLevels 5;
+    maxLocalCells       5000000;
+    maxGlobalCells      50000000;
+}
+
+snapControls 
+{
+    nSmoothPatch    5;
+    tolerance       2.0;
+    nFeatureSnapIter 10;
+    nSolveIter       50;
+    nRelaxIter      5;
+
+}
+
+addLayersControls
+{
+    layers
+    {
+        "(body|.*Wheel)"
+        {
+            nSurfaceLayers 5;
+        }
+        "(ground)"
+        {
+            nSurfaceLayers 0;
+        }
+    }
+
+    relativeSizes       off;
+    expansionRatio      1.2;
+    firstLayerThickness 1e-3;
+    //finalLayerThickness 0.4;
+    featureAngle        60;
+    nRelaxIter          10;
+    nLayerIter          50;
+    nSmoothSurfaceNormals  1;
+    nSmoothNormals         3;
+    nSmoothThickness       10;
+    nMedialAxisIter         10;
+    minThickness        1e-5;
+    //minThickness        1e-1;
+    maxThicknessToMedialRatio 0.5;
+
+    // --- NEW CONTROLS FOR SHARP EDGES ---
+    slipFeatureAngle      30;   // Allows layers to slide gracefully around sharp trailing edges instead of collapsing
+    detectExtrusionIsland off;  // Prevents premature termination of layers on thin airfoil sections
+
+}
+
+meshQualityControls
+{
+    #include "meshQualityDict"
+}
+
+writeFlags ();
+
+mergeTolerance 1e-6;
+
+// ************************************************************************* //

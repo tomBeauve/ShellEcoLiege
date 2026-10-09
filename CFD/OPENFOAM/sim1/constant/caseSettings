@@ -1,0 +1,21 @@
+
+WheelRadius    0.2425;
+wheelBase       1.42;
+wheelCenterZ    0.2375;
+
+
+fWheelCenter    (0.58 0 $wheelCenterZ);
+rWheelCenter    (2.0 0 $wheelCenterZ);
+
+
+Uinlet          7;
+intensity       0.05;
+viscRatio       10;
+nu              1.5e-5;
+
+
+WheelSpeed     #calc "$Uinlet / $WheelRadius";
+
+kInlet          #calc "1.5 * pow($Uinlet * $intensity, 2)";
+nutInlet        #calc "$viscRatio * $nu";
+omegaInlet      #calc "$kInlet / $nutInlet";

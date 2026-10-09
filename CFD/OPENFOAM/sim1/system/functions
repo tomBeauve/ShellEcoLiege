@@ -1,0 +1,165 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      functions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+
+#includeFunc forceCoeffsIncompressible
+
+#includeFunc time
+
+#include    "$FOAM_CASE/constant/caseSettings"
+
+yPlus
+{
+    type            yPlus;
+    libs            ("libfieldFunctionObjects.so");
+    U               U;              // velocity field
+    nu              nu;
+    patches         (body  ".*Wheel");
+    writeControl    outputTime;
+}
+
+wallShearStress
+{
+    type            wallShearStress;
+    libs            ("libutilityFunctionObjects.so");
+    patches         (body ".*Wheel");
+    writeControl    outputTime;
+}
+/*
+surfaceDistance1
+{
+    type            surfaceDistance;
+    libs            ("libfieldFunctionObjects.so");
+
+    geometry
+    {
+        (body ".*Wheel" ground)
+        {
+            type triSurfaceMesh;
+            name walls;
+        }
+    }
+
+    calculateCells  true;
+
+    writeControl    writeTime;
+}
+*/
+writeWallDist
+{
+    type            writeObjects;
+    libs            ("libutilityFunctionObjects.so");
+    writeControl    outputTime;
+    objects         (yWall);
+}
+
+totalPressure
+{
+    type            pressure;
+    libs            ("libfieldFunctionObjects.so");
+    p               p;
+    U               U;
+
+    calcTotal       yes;      
+    calcCoeff       yes;      // Will calculate the CpT and not the absolute pT
+
+    calcStatic      no;
+
+    rho             rhoInf;
+    rhoInf          1.225;
+    UInf            ($Uinlet 0 0);     // Your inlet velocity
+    pInf            0;
+    pRef            0;
+
+    writeControl    outputTime;
+}
+coeffSaticPressure
+{
+    type            pressure;
+    libs            ("libfieldFunctionObjects.so");
+    p               p;
+    U               U;
+
+    calcTotal       no;      
+    calcCoeff       yes;     
+
+    calcStatic      yes;
+
+    rho             rhoInf;
+    rhoInf          1.225;
+    UInf            ($Uinlet 0 0);     
+    pInf            0;
+    pRef            0;
+
+    writeControl    outputTime;
+}
+
+QCriterion1
+{
+    type            Q;
+    libs            ("libfieldFunctionObjects.so");
+
+    field           U;
+
+    writeControl    outputTime;
+}
+
+bodyForces
+{
+    type              forceCoeffs;
+    libs              ("libforces.so");
+    #include "$FOAM_CASE/constant/caseSettings"
+    patches           (body);
+
+    magUInf           $Uinlet;
+    lRef              $wheelBase;
+    rho               rhoInf;
+    rhoInf            1.225;
+    Aref              1;
+    CofR              (0.8 0 0);
+
+    liftDir           (0 0 1);
+    dragDir           (1 0 0);
+    pitchAxis         (0 1 0);
+
+    log               true;
+    writeControl      timeStep;
+    writeInterval     5;
+}
+
+wheelsForces
+{
+    type              forceCoeffs;
+    libs              ("libforces.so");
+    #include "$FOAM_CASE/constant/caseSettings"
+    patches           (".*Wheel");
+
+    magUInf           $Uinlet;
+    lRef              $wheelBase;
+    rho               rhoInf;
+    rhoInf            1.225;
+    Aref              1;
+    CofR              (0.8 0 0);
+
+    liftDir           (0 0 1);
+    dragDir           (1 0 0);
+    pitchAxis         (0 1 0);
+
+    log               true;
+    writeControl      timeStep;
+    writeInterval     5;
+}
+// ************************************************************************* //

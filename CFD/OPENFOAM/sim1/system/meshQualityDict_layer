@@ -1,0 +1,69 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      meshQualityDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Maximum non-orthogonality allowed. Set to 180 to disable.
+maxNonOrtho 180;
+
+//- Max skewness allowed. Set to <0 to disable.
+maxBoundarySkewness 25;
+maxInternalSkewness 10;
+
+//- Max concaveness allowed. Is angle (in degrees) below which concavity
+//  is allowed. 0 is straight face, <0 would be convex face.
+//  Set to 180 to disable.
+maxConcave 180;
+
+//- Minimum cell pyramid volume relative to min bounding box length^3
+//  Set to a fraction of the smallest cell volume expected.
+//  Set to very negative number (e.g. -1e30) to disable.
+minVol 1e-30;
+
+//- Minimum quality of the tet formed by the face-centre
+//  and variable base point minimum decomposition triangles and
+//  the cell centre. Set to very negative number (e.g. -1e30) to
+//  disable.
+//     <0 = inside out tet,
+//      0 = flat tet
+//      1 = regular tet
+minTetQuality -1e-15;
+
+//- Minimum face twist. Set to <-1 to disable. dot product of face normal
+// and face centre triangles normal
+minTwist -0.001;
+
+//- Minimum normalised cell determinant. 
+minDeterminant 1e-10;
+
+//- Relative position of face in relation to cell centres (0.5 for orthogonal
+//  mesh) (0 -> 0.5)
+minFaceWeight 0.00001;
+
+//- Volume ratio of neighbouring cells (0 -> 1)
+minVolRatio 1e-15;
+
+nSmoothScale   4;
+
+errorReduction 0.5;
+
+relaxed
+{
+    // The relaxed block is used during the final layer addition loops. 
+    // Since everything above is disabled, this just mirrors it.
+    maxNonOrtho 180;  
+    //maxBoundarySkewness 15;
+    //maxInternalSkewness 6;
+}
+
+// ************************************************************************* //
