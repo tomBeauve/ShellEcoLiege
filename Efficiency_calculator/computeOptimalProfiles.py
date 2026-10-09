@@ -11,6 +11,7 @@ vehicle = Vehicle()
 drivetrain = Drivetrain()
 track = Track()
 
+# Calls the lap time optimizer
 start = time()
 optimal_force, optimal_velocity, E_optimal = lapConsumption_optimize(
     vehicle, drivetrain, track

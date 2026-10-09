@@ -2,12 +2,6 @@ import numpy as np
 import pandas as pd
 
 
-import numpy as np
-
-
-import numpy as np
-
-
 def build_precise_short_track(full_distance, full_elevation, s_start=2370.0, s_end=3600.0, L_bridge=48.3):
     """
     Builds the precise short track profile:

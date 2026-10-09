@@ -4,13 +4,14 @@ from scipy.optimize import minimize
 
 def lapConsumption_postProcess(vehicle, drivetrain, track, velocity):
     """
-    Returns 
+    Returns :
     the total electrical energy consumption 
     and 
     all the individual mechanical works / losses to identify where energy goes
 
-    given the car parameters, the track data and a velocity profile
-    velocity and track.distance arrays must be the same size
+    Inputs :
+    car parameters, track data and a velocity profile
+    (velocity and track.distance arrays must be the same size : the velocity at each point of track.distance)
     """
     v = velocity
     x = track.distance
@@ -43,7 +44,7 @@ def lapConsumption_postProcess(vehicle, drivetrain, track, velocity):
     # Accumulator for total electrical/source energy (Joules)
     E_tot = 0.0
 
-    # Performs Simpson integration of energy consumed (using point i, i+1 and their mid i+1/2 )
+    # Performs Simpson integration of energy consumed (using point i, i+1 and their mid i+1/2)
     for i in range(len(velocity) - 1):
         x_mid = (x[i] + x[i+1]) / 2.0
         z_mid = (z[i] + z[i+1]) / 2.0
@@ -83,11 +84,13 @@ def lapConsumption_postProcess(vehicle, drivetrain, track, velocity):
                 (drivetrain.i_tot * drivetrain.efficiency_transmission)
 
             eta_raw = drivetrain.efficiency_map(torque, omega)
+            # Just in case eta_raw = a single value in an array like [0.97]
             if isinstance(eta_raw, np.ndarray):
                 eta_val = eta_raw.item()
             else:
                 eta_val = float(eta_raw)
 
+            # efficiency bounded from 0.1 to 1.0 (to avoid some problems)
             eta_clamped = max(min(eta_val, 1.0), 0.1)
             return force / eta_clamped
 
@@ -110,7 +113,7 @@ def lapConsumption_postProcess(vehicle, drivetrain, track, velocity):
 
 def lapConsumption_optimize(vehicle, drivetrain, track):
     """
-    Optimize the tractive force profile to minimize total electrical energy consumption over a lap.
+    Optimize the tractive force profile to minimize total electrical energy consumption over a run.
     """
 
     N = len(track.distance)
@@ -120,13 +123,18 @@ def lapConsumption_optimize(vehicle, drivetrain, track):
     g = 9.81
     rho = 1.225
 
+    # initial guess for the optimal force profile,
+    # You may change it to see potentially different results
     f_trac_guess = np.ones(N) * 10.0
 
     def compute_velocity_profile(f_trac):
+        """
+        Computes the velocity profile that results from a tractive force profile
+        """
         v = np.zeros(N)
 
-        # Start from a complete stop, avoid 0 for numerical problems
-        v[0] = 0.001  # track.min_avg_velocity
+        # Start from a complete stop (regulation), avoid 0 for numerical problems
+        v[0] = 0.001  # or track.min_avg_velocity if you want a warm start
 
         dz_dx = np.gradient(z, x)
 
@@ -139,11 +147,11 @@ def lapConsumption_optimize(vehicle, drivetrain, track):
             # Net force
             f_net = f_trac[i] - (f_aero + f_rr + f_slope)
 
-            # Acceleration: a = F_net / m
+            # Acceleration: a = F_net / m_e
             a = f_net / vehicle.mass_e
 
             dx = x[i+1] - x[i]
-            # Kinematic step: v_{i+1}^2 = v_i^2 + 2 * a * ds ( + prevent negative velocity via clip)
+            # Kinematic step: v_{i+1}^2 = v_i^2 + 2 * a * dx ( + prevent negative velocity via clip)
             v_next_sq = v[i]**2 + 2.0 * a * dx
             v[i+1] = np.sqrt(max(0.0, v_next_sq))
 
@@ -151,18 +159,19 @@ def lapConsumption_optimize(vehicle, drivetrain, track):
 
     def objective(f_trac):
         v = compute_velocity_profile(f_trac)
+        # Penalty weight : 0.0 to disable, 1.0 seems quite appropriate to damp jitter (if optimal force profile ~smooth)
         w = 0.0
-        # Regularization term to avoid jitter in force profile
+        # Adds a penalization term to avoid jitter in force profile
         return lapConsumption_postProcess(vehicle, drivetrain, track, v)["E_total_electrical"] + w * np.sum((f_trac[1:] - f_trac[:-1])**2)
 
     constraints = []
 
-    # Constraint: Total lap time must be <= max_time
+    # Constraint: Total lap time must be <= max_time (to enforce v_avg_min)
     def time_constraint(f_trac):
         v = compute_velocity_profile(f_trac)
         v_mid = 0.5 * (v[:-1] + v[1:])
         dx = np.diff(track.distance)
-        total_time = np.sum(dx / np.clip(v_mid, 0.1, 30.0))
+        total_time = np.sum(dx / np.clip(v_mid, 0.01, 30.0))
         return track.max_time - total_time  # Must be >= 0
 
     constraints.append({'type': 'ineq', 'fun': time_constraint})
@@ -171,6 +180,7 @@ def lapConsumption_optimize(vehicle, drivetrain, track):
     bounds = [(0.0, drivetrain.F_trac_max)]
 
     # Run optimization on force controls
+    # One may change 'maxiter' or 'ftol' to get more/less precise, this will impact CPU time strongly
     result = minimize(objective, f_trac_guess, method='SLSQP', bounds=bounds,
                       constraints=constraints, options={'maxiter': 100, 'ftol': 1e-4})
 

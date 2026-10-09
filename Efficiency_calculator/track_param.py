@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 
-
+# Import the altimetry profile of silesa ring & put x,z into arrays
 df = pd.read_csv('altimetry_profile/silesa_western_tom.csv', sep=';', header=0)
 points = df.values
 racetrack_x = points[:, 0]
 racetrack_z = points[:, 1]
-
 lap_distance = racetrack_x[-1]
+
+# Simulation parameters
 run_length = 7.0 * lap_distance  # m
 min_avg_velocty = 7.0  # m/s
 

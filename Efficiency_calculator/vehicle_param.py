@@ -14,6 +14,7 @@ class Vehicle:
 
     @property
     def mass(self) -> float:
+        # Automatically updates when car_mass changes
         return self.car_mass + self.driver_mass
 
     @property

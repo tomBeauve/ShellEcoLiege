@@ -63,7 +63,7 @@ for name in parameters:
     eff_minus_list.append(eff_minus)
 
 # ==========================================
-# PLOTTING SENSITIVITY ERROR BAR CHART
+# PLOTTING SENSITIVITY CHART
 # ==========================================
 plt.figure(figsize=(7, 4))
 y_pos = np.arange(len(parameters))
