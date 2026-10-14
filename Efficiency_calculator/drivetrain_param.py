@@ -21,9 +21,9 @@ efficiency_motor_max = 0.87
 # Efficiency coefficients (define the efficiency map however you want, this is from Golverk formula, given in MECA0527)
 # a1, a2, a3, a4, a5, a6 = 0.62, 0.42, 0.38, -0.310, -0.140, -0.360  # option 1
 
-# a1, a2, a3, a4, a5, a6 = 0.55, 0.60, 0.42, -0.40, -0.10, -0.45  # option 2
+a1, a2, a3, a4, a5, a6 = 0.55, 0.60, 0.42, -0.40, -0.10, -0.45  # option 2
 
-a1, a2, a3, a4, a5, a6 = 0.87, 0, 0.0, -0.0, -0.0, -0.0  # constant efficiency
+# a1, a2, a3, a4, a5, a6 = 0.87, 0, 0.0, -0.0, -0.0, -0.0  # constant efficiency
 
 
 class Drivetrain:

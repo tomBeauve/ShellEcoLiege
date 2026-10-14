@@ -18,7 +18,7 @@ optimal_force, optimal_velocity, E_optimal = lapConsumption_optimize(
 )
 print("Elapsed time for opt:", round(time() - start, 2))
 np.savez(
-    "results/optimalRun/optimal_run.npz",
+    "results_optimalRun/optimal_run.npz",
     force=optimal_force,
     velocity=optimal_velocity,
     distance=track.distance,

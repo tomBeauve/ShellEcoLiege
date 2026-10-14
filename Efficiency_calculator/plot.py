@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from drivetrain_param import Drivetrain
 
-data = np.load("optimal_run.npz")
+data = np.load("results_optimalRun/optimal_run.npz")
 
 
 df = pd.read_csv('altimetry_profile/silesa_western_tom.csv', sep=';', header=0)
