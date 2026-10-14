@@ -2,7 +2,7 @@
 car_mass = 46.8
 driver_mass = 50.0
 SCx = 0.04
-crr = 0.0072  # https://www.bicyclerollingresistance.com/tour-reviews/schwalbe-kojak-2017#rr
+crr = 0.007  # https://www.bicyclerollingresistance.com/tour-reviews/schwalbe-kojak-2017#rr
 
 
 class Vehicle:
